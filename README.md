@@ -1,4 +1,53 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Guia de Início Rápido
+
+Este é um projeto [Next.js](https://nextjs.org) inicializado com [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+
+## Pré-requisitos
+
+- Node.js (18.x ou superior)
+- Next.js (15.3.3)
+- React.js (19.0.0)
+- Uso obrigatório de [Semantic Commit Messages](https://gist.github.com/joshbuchea/6f47e86d2510bce28f8e7f42ae84c716) em todos os commits
+
+## Instalação
+
+1. Clone o repositório:
+
+   ```bash
+   git clone https://github.com/SEU_USUARIO/hackathon-base.git
+   cd hackathon-base
+   ```
+
+2. Instale as dependências:
+
+   ```bash
+   yarn
+   ```
+
+## Execução
+
+Inicie o servidor de desenvolvimento:
+
+```bash
+yarn dev
+```
+
+A aplicação estará acessível em [http://localhost:3000](http://localhost:3000).
+
+## Credenciais de Acesso
+
+Para configurar o backend com Supabase:
+
+1. Crie um projeto em [Supabase](https://supabase.com/)
+2. Obtenha as credenciais na seção "Settings" > "API"
+3. Configure o arquivo `.env.local` na raiz do projeto:
+
+   ```bash
+   NEXT_PUBLIC_SUPABASE_URL=seu-url-supabase
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=sua-chave-anonima
+   ```
+
+4. Reinicie o servidor após as alterações
 
 ## Getting Started
 
