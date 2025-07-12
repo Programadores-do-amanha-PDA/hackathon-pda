@@ -8,8 +8,8 @@ import {
   deleteZoomPastInstanceById,
   createZoomPastInstance,
   createManyZoomPastInstance,
-} from "@/app/actions/classrooms/zoom/meetings-past-instancies";
-import { ZoomMeetingPastInstancesType } from "@/types/zoom/meetings";
+} from "@/app/actions/classrooms/zoom";
+import { ZoomMeetingPastInstancesType } from "@/types/zoom";
 
 const useZoomPastInstancesStack = () => {
   const [pastInstances, setPastInstances] = useState<

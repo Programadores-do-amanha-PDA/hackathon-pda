@@ -4,12 +4,12 @@ import {
   getAllClassrooms,
   updateClassroom,
 } from "@/app/actions/classrooms";
-import { ClassroomType } from "@/types/classrooms";
+import { ClassroomT } from "@/types/classrooms";
 import { useState } from "react";
 import { toast } from "sonner";
 
 const ClassroomStack = () => {
-  const [classrooms, setClassrooms] = useState<ClassroomType[]>([]);
+  const [classrooms, setClassrooms] = useState<ClassroomT[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleGetAllClassrooms = async () => {
@@ -28,7 +28,7 @@ const ClassroomStack = () => {
   };
 
   const handleCreateClassroom = async (
-    classroomData: Partial<ClassroomType>
+    classroomData: Partial<ClassroomT>
   ) => {
     try {
       if (
@@ -60,7 +60,7 @@ const ClassroomStack = () => {
 
   const handleUpdateClassroom = async (
     classroomId: string,
-    updates: Partial<ClassroomType>
+    updates: Partial<ClassroomT>
   ) => {
     try {
       if (!classroomId || !updates) {
@@ -116,15 +116,15 @@ const ClassroomStack = () => {
 export default ClassroomStack;
 
 export interface ClassroomStackI {
-  classrooms: ClassroomType[];
+  classrooms: ClassroomT[];
   handleGetAllClassrooms: () => Promise<boolean>;
   classroomsLoading: boolean;
   handleCreateClassroom: (
-    classroomData: Partial<ClassroomType>
+    classroomData: Partial<ClassroomT>
   ) => Promise<boolean | string>;
   handleUpdateClassroom: (
     classroomId: string,
-    updates: Partial<ClassroomType>
+    updates: Partial<ClassroomT>
   ) => Promise<boolean>;
   handleDeleteClassroom: (classroomId: string) => Promise<boolean>;
 }

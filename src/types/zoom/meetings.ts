@@ -32,12 +32,14 @@ export interface ZoomMeetingType {
   registration_url: string;
   past_instances: ZoomMeetingPastInstancesType[];
   participants?: ZoomMeetingParticipantType[];
+  justifications?: ZoomMeetingJustificationType[];
   polls?: ZoomMeetingPollType[];
-  poll_results?: ZoomMeetingPollResults[];
+  poll_results?: ZoomMeetingPollResultQuestionDetails[];
   account_id?: string;
   classroom_id?: string;
   is_visible_on_schedule?: boolean;
   synchronized_at?: string;
+  class_type?: ZoomClassType;
 }
 
 export interface ZoomMeetingOccurrenceType {
@@ -82,17 +84,23 @@ export interface ZoomMeetingSettingsType {
   meeting_authentication?: boolean;
   registrants_email_notification?: boolean;
   polling?: boolean;
+  class_type?: ZoomClassType;
 }
 
 export interface ZoomMeetingPastInstancesType {
-  uuid: string;
+  id: string;
+  uuid?: string;
+  classroom_id: string | null;
+  account_id: string | null;
+  meeting_id: string | null;
   start_time: string;
-  id: number;
-  poll_results?: ZoomMeetingPollResults[];
+  poll_results?: ZoomMeetingPollResultQuestionDetails[];
   participants?: ZoomMeetingParticipantType[];
+  justifications?: ZoomMeetingJustificationType[];
   is_visible_on_schedule: boolean | undefined;
-  class_type?: ZoomClassType;
-  meetingId?: number;
+  class_type: ZoomClassType;
+  synchronized_at: string | null;
+  created_at: string;
 }
 
 export type ZoomClassType =
@@ -119,21 +127,28 @@ export interface ZoomMeetingParticipantType {
   status: string;
   internal_user: boolean;
 }
+export interface ZoomMeetingJustificationType {
+  id?: string;
+  user_email: string;
+  message: string;
+}
 
 export interface ZoomMeetingPollResults {
   id: number;
-  questions: {
-    email: string;
-    name: string;
-    question_details: {
-      answer: string;
-      date_time: string;
-      polling_id: string;
-      question: string;
-    }[];
-  }[];
+  questions: ZoomMeetingPollResultQuestionDetails[];
   start_time: string;
   uuid: string;
+}
+
+export interface ZoomMeetingPollResultQuestionDetails {
+  email: string;
+  name: string;
+  question_details: {
+    answer: string;
+    date_time: string;
+    polling_id: string;
+    question: string;
+  }[];
 }
 
 export interface ZoomMeetingPollType {
