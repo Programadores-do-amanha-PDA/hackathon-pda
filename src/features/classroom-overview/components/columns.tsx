@@ -73,11 +73,9 @@ export const createColumns = (data: ClassroomOverviewData): ColumnDef<StudentOve
         {
             accessorKey: "presence.general",
             header: ({ column }) => (
-                <div className="text-center">
-                    <SortableHeader column={column}>
-                        Geral
-                    </SortableHeader>
-                </div>
+                <SortableHeader column={column}>
+                    Geral
+                </SortableHeader>
             ),
             cell: ({ row }) => (
                 <div className="text-center font-medium">
@@ -88,11 +86,9 @@ export const createColumns = (data: ClassroomOverviewData): ColumnDef<StudentOve
         {
             accessorKey: "presence.programming",
             header: ({ column }) => (
-                <div className="text-center">
-                    <SortableHeader column={column}>
-                        Programação
-                    </SortableHeader>
-                </div>
+                <SortableHeader column={column}>
+                    Programação
+                </SortableHeader>
             ),
             cell: ({ row }) => (
                 <div className="text-center font-medium">
@@ -103,11 +99,9 @@ export const createColumns = (data: ClassroomOverviewData): ColumnDef<StudentOve
         {
             accessorKey: "presence.english",
             header: ({ column }) => (
-                <div className="text-center">
-                    <SortableHeader column={column}>
-                        Inglês
-                    </SortableHeader>
-                </div>
+                <SortableHeader column={column}>
+                    Inglês
+                </SortableHeader>
             ),
             cell: ({ row }) => (
                 <div className="text-center font-medium">
@@ -118,11 +112,9 @@ export const createColumns = (data: ClassroomOverviewData): ColumnDef<StudentOve
         {
             accessorKey: "presence.softSkills",
             header: ({ column }) => (
-                <div className="text-center">
-                    <SortableHeader column={column}>
-                        Soft Skills
-                    </SortableHeader>
-                </div>
+                <SortableHeader column={column}>
+                    Soft Skills
+                </SortableHeader>
             ),
             cell: ({ row }) => (
                 <div className="text-center font-medium">
@@ -137,11 +129,9 @@ export const createColumns = (data: ClassroomOverviewData): ColumnDef<StudentOve
         id: `coodesh-${test.id}`,
         accessorFn: (row) => row.coodesh[test.id],
         header: ({ column }) => (
-            <div className="text-center">
-                <SortableHeader column={column}>
-                    {test.name.replace('Teste ', '')}
-                </SortableHeader>
-            </div>
+            <SortableHeader column={column}>
+                {test.name}
+            </SortableHeader>
         ),
         cell: ({ row }) => {
             const value = row.original.coodesh[test.id];
@@ -158,15 +148,13 @@ export const createColumns = (data: ClassroomOverviewData): ColumnDef<StudentOve
         id: `project-${project.id}`,
         accessorFn: (row) => row.projects[project.id],
         header: ({ column }) => (
-            <div className="text-center">
-                <SortableHeader column={column}>
-                    <div className="flex flex-col items-center gap-1">
-                        <span className="text-sm">
-                            {project.name}
-                        </span>
-                    </div>
-                </SortableHeader>
-            </div>
+            <SortableHeader column={column}>
+                <div className="flex flex-col items-center gap-1">
+                    <span className="text-sm">
+                        {project.name}
+                    </span>
+                </div>
+            </SortableHeader>
         ),
         cell: ({ row }) => {
             const value = row.original.projects[project.id];

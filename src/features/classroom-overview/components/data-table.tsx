@@ -13,7 +13,7 @@ import {
     useReactTable,
 } from "@tanstack/react-table";
 import { ChevronDown, Eye } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -39,11 +39,90 @@ interface ColumnGroup {
     label: string | null; // null means it's an individual column that spans 2 rows
     colspan: number;
     columns: string[];
+    columnHeaders?: { [key: string]: string }; // Map of column id to header name
 }
 
 interface DataTableProps<TData, TValue> {
     columns: ColumnDef<TData, TValue>[];
     data: TData[];
+}
+
+// Function to determine column groups
+function getColumnGroups(
+    columns: Array<{ id: string; columnDef?: { accessorKey?: string; header?: unknown } }>
+): ColumnGroup[] {
+    const groups: ColumnGroup[] = [];
+    let currentGroup: ColumnGroup | null = null;
+
+    // Process all columns, visibility will be handled in rendering
+    columns.forEach((column) => {
+        const columnId = column.id;
+        const accessorKey = column.columnDef?.accessorKey;
+        const headerName = typeof column.columnDef?.header === 'string' ? column.columnDef.header : columnId;
+
+        // Check if this column belongs to a group based on accessorKey
+        if (accessorKey?.startsWith('presence.')) {
+            if (!currentGroup || currentGroup.id !== 'presence') {
+                currentGroup = {
+                    id: 'presence',
+                    label: 'Presença',
+                    colspan: 0,
+                    columns: [],
+                    columnHeaders: {}
+                };
+                groups.push(currentGroup);
+            }
+            currentGroup.colspan++;
+            currentGroup.columns.push(columnId);
+            if (currentGroup.columnHeaders && headerName) {
+                currentGroup.columnHeaders[columnId] = headerName;
+            }
+        } else if (columnId?.startsWith('coodesh-')) {
+            if (!currentGroup || currentGroup.id !== 'coodesh') {
+                currentGroup = {
+                    id: 'coodesh',
+                    label: 'Coodesh',
+                    colspan: 0,
+                    columns: [],
+                    columnHeaders: {}
+                };
+                groups.push(currentGroup);
+            }
+            currentGroup.colspan++;
+            currentGroup.columns.push(columnId);
+            if (currentGroup.columnHeaders && headerName) {
+                currentGroup.columnHeaders[columnId] = headerName;
+            }
+        } else if (columnId?.startsWith('project-')) {
+            if (!currentGroup || currentGroup.id !== 'projects') {
+                currentGroup = {
+                    id: 'projects',
+                    label: 'Projetos',
+                    colspan: 0,
+                    columns: [],
+                    columnHeaders: {}
+                };
+                groups.push(currentGroup);
+            }
+            currentGroup.colspan++;
+            currentGroup.columns.push(columnId);
+            if (currentGroup.columnHeaders && headerName) {
+                currentGroup.columnHeaders[columnId] = headerName;
+            }
+        } else {
+            // Individual column (not grouped) - will span 2 rows
+            groups.push({
+                id: columnId || `column-${groups.length}`,
+                label: null, // null means it's an individual column
+                colspan: 1,
+                columns: [columnId || `column-${groups.length}`],
+                columnHeaders: { [columnId || `column-${groups.length}`]: headerName || columnId || `column-${groups.length}` }
+            });
+            currentGroup = null;
+        }
+    });
+
+    return groups;
 }
 
 export function DataTable<TData, TValue>({
@@ -54,68 +133,6 @@ export function DataTable<TData, TValue>({
     const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [rowSelection, setRowSelection] = useState({});
-
-    // Function to determine column groups
-    const getColumnGroups = (columns: ColumnDef<TData, TValue>[]): ColumnGroup[] => {
-        const groups: ColumnGroup[] = [];
-        let currentGroup: ColumnGroup | null = null;
-
-        columns.forEach((column) => {
-            const columnId = column.id || (column as ColumnDef<TData, TValue> & { accessorKey?: string }).accessorKey;
-
-            // Check if this column belongs to a group
-            if (columnId?.startsWith('presence.')) {
-                if (!currentGroup || currentGroup.id !== 'presence') {
-                    currentGroup = {
-                        id: 'presence',
-                        label: 'Presença',
-                        colspan: 0,
-                        columns: []
-                    };
-                    groups.push(currentGroup);
-                }
-                currentGroup.colspan++;
-                currentGroup.columns.push(columnId);
-            } else if (columnId?.startsWith('coodesh-')) {
-                if (!currentGroup || currentGroup.id !== 'coodesh') {
-                    currentGroup = {
-                        id: 'coodesh',
-                        label: 'Coodesh',
-                        colspan: 0,
-                        columns: []
-                    };
-                    groups.push(currentGroup);
-                }
-                currentGroup.colspan++;
-                currentGroup.columns.push(columnId);
-            } else if (columnId?.startsWith('project-')) {
-                if (!currentGroup || currentGroup.id !== 'projects') {
-                    currentGroup = {
-                        id: 'projects',
-                        label: 'Projetos',
-                        colspan: 0,
-                        columns: []
-                    };
-                    groups.push(currentGroup);
-                }
-                currentGroup.colspan++;
-                currentGroup.columns.push(columnId);
-            } else {
-                // Individual column (not grouped) - will span 2 rows
-                groups.push({
-                    id: columnId || `column-${groups.length}`,
-                    label: null, // null means it's an individual column
-                    colspan: 1,
-                    columns: [columnId || `column-${groups.length}`]
-                });
-                currentGroup = null;
-            }
-        });
-
-        return groups;
-    };
-
-    const columnGroups = getColumnGroups(columns);
 
     const table = useReactTable({
         data,
@@ -136,10 +153,15 @@ export function DataTable<TData, TValue>({
         },
         initialState: {
             pagination: {
-                pageSize: 50,
+                pageSize: 10,
             },
         },
     });
+
+    const allColumns = table.getAllColumns();
+    const columnGroups = useMemo(() => {
+        return getColumnGroups(allColumns as Array<{ id: string; columnDef?: { accessorKey?: string; header?: unknown } }>);
+    }, [allColumns]); // Use actual table columns to get correct IDs
 
     return (
         <div className="w-full space-y-4">
@@ -165,10 +187,40 @@ export function DataTable<TData, TValue>({
                     <DropdownMenuContent align="end" className="w-[200px]">
                         <DropdownMenuLabel>Colunas</DropdownMenuLabel>
                         <DropdownMenuSeparator />
+
                         {table
                             .getAllColumns()
                             .filter((column) => column.getCanHide())
                             .map((column) => {
+                                const getColumnDisplayName = (col: typeof column) => {
+                                    const header = table.getHeaderGroups()[0]?.headers.find(h => h.id === col.id);
+                                    if (!header || !header.column.columnDef.header) return col.id;
+
+                                    const headerDef = header.column.columnDef.header;
+
+                                    // If header is a function that returns JSX with SortableHeader
+                                    if (typeof headerDef === 'function') {
+                                        try {
+                                            const result = headerDef(header.getContext());
+                                            // Check if it's a SortableHeader component with children
+                                            if (result && typeof result === 'object' && 'props' in result && result.props.children) {
+                                                return result.props.children;
+                                            }
+                                        } catch {
+                                            // If function execution fails, fallback to column id
+                                            return col.id;
+                                        }
+                                    }
+
+                                    // If header is a string, return it directly
+                                    if (typeof headerDef === 'string') {
+                                        return headerDef;
+                                    }
+
+                                    // Fallback to column id
+                                    return col.id;
+                                };
+
                                 return (
                                     <DropdownMenuCheckboxItem
                                         key={column.id}
@@ -179,7 +231,7 @@ export function DataTable<TData, TValue>({
                                         }
                                         useEyeIcon
                                     >
-                                        {getColumnDisplayName(column.id)}
+                                        {getColumnDisplayName(column)}
                                     </DropdownMenuCheckboxItem>
                                 );
                             })}
@@ -191,40 +243,58 @@ export function DataTable<TData, TValue>({
                     <TableHeader>
                         {/* Group headers row */}
                         <TableRow className="border-b-2 border-gray-300 bg-gray-50">
-                            {columnGroups.map((group) => (
-                                <TableHead
-                                    key={group.id}
-                                    colSpan={group.colspan}
-                                    rowSpan={group.label === null ? 2 : 1} // Individual columns span 2 rows
-                                    className={`px-4 text-sm font-semibold border-r border-gray-200 last:border-r-0 min-w-[120px] ${group.label === null
-                                        ? 'h-22 bg-gray-50 text-gray-500 font-medium' // Individual column styling
-                                        : 'h-10 bg-gray-50 text-gray-500' // Group header styling
-                                        }`}
-                                >
-                                    {group.label ? (
-                                        <div className="text-start font-medium ">
-                                            {group.label}
-                                        </div>
-                                    ) : (
-                                        // Render individual column header directly
-                                        <div className="font-medium text-gray-500 flex items-center justify-between w-full">
-                                            {(() => {
-                                                const header = table.getHeaderGroups()[0]?.headers.find(h => h.id === group.columns[0]);
-                                                if (!header || header.isPlaceholder) return null;
-                                                return flexRender(
-                                                    header.column.columnDef.header,
-                                                    header.getContext()
-                                                );
-                                            })()}
-                                        </div>
-                                    )}
-                                </TableHead>
-                            ))}
+                            {columnGroups
+                                .filter((group) => {
+                                    // Filter out groups that have no visible columns
+                                    return group.columns.some(columnId => {
+                                        const tableColumn = table.getColumn(columnId);
+                                        return tableColumn?.getIsVisible() ?? true;
+                                    });
+                                })
+                                .map((group) => {
+                                    // Calculate actual visible colspan
+                                    const visibleColspan = group.columns.filter(columnId => {
+                                        const tableColumn = table.getColumn(columnId);
+                                        return tableColumn?.getIsVisible() ?? true;
+                                    }).length;
+
+                                    return (
+                                        <TableHead
+                                            key={group.id}
+                                            colSpan={visibleColspan}
+                                            rowSpan={group.label === null ? 2 : 1} // Individual columns span 2 rows
+                                            className={`px-4 text-sm font-semibold border-r border-gray-200 last:border-r-0 min-w-[120px] ${group.label === null
+                                                ? 'h-22 bg-gray-50 text-gray-500 font-medium' // Individual column styling
+                                                : 'h-10 bg-gray-50 text-gray-500' // Group header styling
+                                                }`}
+                                        >
+                                            {group.label ? (
+                                                <div className="text-start font-medium">
+                                                    {group.label}
+                                                </div>
+                                            ) : (
+                                                <div className="font-medium text-gray-500 flex items-center justify-between w-full">
+                                                    {(() => {
+                                                        const header = table.getHeaderGroups()[0]?.headers.find(h =>
+                                                            h.id === group.columns[0] && h.column.getIsVisible()
+                                                        );
+                                                        if (!header || header.isPlaceholder) return null;
+                                                        return flexRender(
+                                                            header.column.columnDef.header,
+                                                            header.getContext()
+                                                        );
+                                                    })()}
+                                                </div>
+                                            )}
+                                        </TableHead>
+                                    );
+                                })}
                         </TableRow>
                         {/* Individual column headers row - only for grouped columns */}
-                        {table.getHeaderGroups().map((headerGroup) => (
-                            <TableRow key={headerGroup.id} className="border-b-2 border-gray-300">
-                                {headerGroup.headers.map((header) => {
+                        <TableRow className="border-b-2 border-gray-300">
+                            {table.getHeaderGroups()[0]?.headers
+                                .filter(header => header.column.getIsVisible())
+                                .map((header) => {
                                     // Skip rendering if this column is individual (already rendered in first row)
                                     const isIndividualColumn = columnGroups.some(group =>
                                         group.label === null && group.columns.includes(header.id)
@@ -248,8 +318,7 @@ export function DataTable<TData, TValue>({
                                         </TableHead>
                                     );
                                 })}
-                            </TableRow>
-                        ))}
+                        </TableRow>
                     </TableHeader>
                     <TableBody>
                         {table.getRowModel().rows?.length ? (
@@ -341,30 +410,4 @@ export function DataTable<TData, TValue>({
             </div>
         </div>
     );
-}
-
-function getColumnDisplayName(columnId: string): string {
-    const displayNames: Record<string, string> = {
-        name: "Nome",
-        email: "Email",
-        number: "Número",
-        "presence.general": "Presença Geral",
-        "presence.programming": "Programação",
-        "presence.english": "Inglês",
-        "presence.softSkills": "Soft Skills",
-    };
-
-    if (displayNames[columnId]) {
-        return displayNames[columnId];
-    }
-
-    if (columnId.startsWith("coodesh-")) {
-        return "Teste Coodesh";
-    }
-
-    if (columnId.startsWith("project-")) {
-        return "Projeto";
-    }
-
-    return columnId;
 }
