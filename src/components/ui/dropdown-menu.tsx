@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
-import { CheckIcon, ChevronRightIcon, CircleIcon } from "lucide-react"
+import { CheckIcon, ChevronRightIcon, CircleIcon, Eye, EyeOff } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -86,8 +86,11 @@ function DropdownMenuCheckboxItem({
   className,
   children,
   checked,
+  useEyeIcon = false,
   ...props
-}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem>) {
+}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem> & {
+  useEyeIcon?: boolean
+}) {
   return (
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
@@ -99,9 +102,13 @@ function DropdownMenuCheckboxItem({
       {...props}
     >
       <span className="pointer-events-none absolute left-2 flex size-3.5 items-center justify-center">
-        <DropdownMenuPrimitive.ItemIndicator>
-          <CheckIcon className="size-4" />
-        </DropdownMenuPrimitive.ItemIndicator>
+        {useEyeIcon ? (
+          checked ? <Eye className="size-4" /> : <EyeOff className="size-4" />
+        ) : (
+          <DropdownMenuPrimitive.ItemIndicator>
+            <CheckIcon className="size-4" />
+          </DropdownMenuPrimitive.ItemIndicator>
+        )}
       </span>
       {children}
     </DropdownMenuPrimitive.CheckboxItem>
