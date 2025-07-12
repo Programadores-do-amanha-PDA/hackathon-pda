@@ -4,7 +4,6 @@ import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload } from 'lucide-react';
 import Papa from 'papaparse';
-
 import {
   AlertDialog,
   AlertDialogContent,
@@ -13,10 +12,11 @@ import {
   AlertDialogTitle,
   AlertDialogAction,
   AlertDialogCancel,
-} from "@/components/ui/alert-dialog"; 
-import { Button } from "@/components/ui/button"; 
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
+
 
 interface UploadStatus {
   state: 'idle' | 'file_selected' | 'error';
@@ -35,6 +35,7 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
     message: 'Aguardando seleção do arquivo...',
   });
 
+
   const onDrop = useCallback((acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const selectedFile = acceptedFiles[0];
@@ -46,6 +47,7 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
         return;
       }
 
+      setUploadStatus({ state: 'file_selected', message: `Arquivo ${selectedFile.name} pronto para upload.` });
       setFile(selectedFile);
       toast.info(`Arquivo ${selectedFile.name} pronto para upload.`);
     }
@@ -60,17 +62,39 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
   });
 
   const handleSave = () => {
-    handleClose();
+    if (!file) {
+      toast.warning("Nenhum arquivo selecionado para salvar.");
+      return;
+    }
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const rawData = results.data as any[];
+        setUploadStatus({ state: 'file_selected', message: "Arquivo lido com sucesso." });
+        toast.success("Arquivo CSV processado com sucesso!");
+      },
+      error: (error) => {
+        console.error("Erro ao analisar o arquivo CSV:", error);
+        toast.error("Falha ao ler o arquivo.");
+        setUploadStatus({ state: 'error', message: "Falha ao ler o arquivo CSV." });
+      },
+    });
   };
 
   const handleClose = () => {
     setFile(null);
+    setUploadStatus({
+      state: 'idle',
+      message: 'Aguardando seleção do arquivo...',
+    });
     onClose();
   };
 
   return (
     <AlertDialog open={isOpen} onOpenChange={handleClose}>
-      <AlertDialogContent> 
+      <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Adicionar atividade</AlertDialogTitle>
         </AlertDialogHeader>
@@ -84,7 +108,7 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
           )}
         >
           <input {...getInputProps()} />
-          
+
           <div className="flex items-center gap-2 mb-4">
             <Upload className="size-5 text-muted-foreground group-hover:text-foreground transition-colors duration-300" />
             <p className="text-sm font-semibold text-foreground">
@@ -99,7 +123,11 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
 
         <AlertDialogFooter className="flex-row justify-end gap-3 mt-6">
           <AlertDialogCancel asChild>
-            <Button className=" font-semibold cursor-pointer transition-colors duration-300" variant="outline" onClick={handleClose}>
+            <Button
+              className="font-semibold cursor-pointer transition-colors duration-300"
+              variant="outline"
+              onClick={handleClose}
+            >
               Cancelar
             </Button>
           </AlertDialogCancel>
