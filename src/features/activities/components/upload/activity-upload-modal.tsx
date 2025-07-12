@@ -1,10 +1,9 @@
-// features/activities/components/upload/activity-upload-modal.tsx
-
 "use client";
 
 import React, { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload } from 'lucide-react';
+import Papa from 'papaparse';
 
 import {
   AlertDialog,
@@ -48,7 +47,6 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
       }
 
       setFile(selectedFile);
-      setUploadStatus({ state: 'file_selected', message: `Arquivo selecionado: ${selectedFile.name}` });
       toast.info(`Arquivo ${selectedFile.name} pronto para upload.`);
     }
   }, []);
@@ -62,18 +60,11 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
   });
 
   const handleSave = () => {
-    if (!file) {
-      toast.warning("Nenhum arquivo selecionado para salvar.");
-      return;
-    }
-
-    console.log("Modal funcionando, pronto para processar o arquivo:", file.name);
     handleClose();
   };
 
   const handleClose = () => {
     setFile(null);
-    setUploadStatus({ state: 'idle', message: 'Aguardando seleção do arquivo...' });
     onClose();
   };
 
@@ -100,7 +91,7 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
               Importar dados de um arquivo .csv
             </p>
           </div>
-          
+
           {uploadStatus.state === 'error' && (
             <p className="text-destructive mt-2 text-sm font-medium">{uploadStatus.message}</p>
           )}
