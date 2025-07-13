@@ -2,7 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AuthUserWithProfileT } from "@/types/auth";
 import { ClassroomT } from "@/types/classrooms";
 import { LucideIcon } from "lucide-react";
-import createClassroomNavigation from "./classroom-navigation";
+// import createClassroomNavigation from "./classroom-navigation";
 
 const createClassroomNavigation = (
   classrooms: ClassroomT[],
@@ -22,6 +22,10 @@ const createClassroomNavigation = (
       url: `/dashboard/admin/classrooms/${classroom.id}`,
       icon: icons[classroom.period],
       items: [
+        {
+          title: "Home",
+          url: `/dashboard/admin/classroom/${classroom.id}`,
+        },
         {
           title: "Visão Geral",
           url: `/dashboard/admin/classrooms/${classroom.id}/attendance`,
