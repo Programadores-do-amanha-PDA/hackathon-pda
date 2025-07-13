@@ -11,7 +11,7 @@ export default async function RootLayout({
   const defaultOpen = cookieStore.get("sidebar_state")?.value === "true";
 
   return (
-    <main className="border-grid flex flex-1 flex-col w-full h-full">
+    <main className="border-grid flex flex-1 flex-col w-full min-h-0">
       <SidebarProvider defaultOpen={defaultOpen}>
         <AdminStackProvider>{children}</AdminStackProvider>
       </SidebarProvider>
