@@ -81,9 +81,9 @@ export const AdminStackProvider = ({
       }}
     >
       <AppSidebar data={sidebarData} />
-      <div className="relative w-full h-full flex flex-col overflow-hidden">
+      <div className="relative w-full min-h-0 flex flex-col flex-1">
         <AppBar pathLabels={pathLabels} />
-        <div className="w-full h-full flex flex-col gap-10 overflow-hidden">
+        <div className="w-full flex-1 overflow-y-auto">
           {children}
         </div>
       </div>
