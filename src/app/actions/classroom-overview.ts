@@ -1,136 +1,111 @@
 "use server";
 
-import { ClassroomOverviewData } from "@/types/classroom-overview";
+import { ClassroomOverviewData, StudentOverview } from "@/types/classroom-overview";
+import { calculatePresenceByType } from "@/utils/calculate-presence-by-type";
+import { getStudentCoodeshGrades } from "@/utils/get-student-coodesh-grades";
+import { getAllCoodeshAssessment } from "./classrooms/coodesh/assessments";
+import { getAllProjectsByClassroomId } from "./classrooms/projects";
+import { getStudentProjectGrades } from "./classrooms/projects/get-student-project";
+import { getAllZoomPastInstancesByClassroomId } from "./classrooms/zoom/meetings-past-instancies";
+import { getAllProfilesFilteredByRole } from "./profiles";
+import { getAllUsersClassroomsByClassroomId } from "./user-classroom";
 
-export async function getClassroomOverviewData(): Promise<ClassroomOverviewData> {
-  // Por enquanto, vamos retornar dados mockados para teste
-  // Depois implementaremos a integração real com Supabase
-  
-  const mockData: ClassroomOverviewData = {
-    students: [
-      {
-        id: "1",
-        name: "João Silva",
-        email: "joao@email.com",
-        number: 1,
-        presence: {
-          general: 85,
-          programming: 90,
-          english: 80,
-          softSkills: 75
-        },
-        coodesh: {
-          "test-1": 85,
-          "test-2": 92
-        },
-        projects: {
-          "mp-1": 8.5,
-          "mp-2": 9.2,
-          "p-1": 8.8,
-          "pi-1": 7.5
-        }
-      },
-      {
-        id: "2",
-        name: "Maria Santos",
-        email: "maria@email.com",
-        number: 2,
-        presence: {
-          general: 92,
-          programming: 95,
-          english: 88,
-          softSkills: 90
-        },
-        coodesh: {
-          "test-1": 78,
-          "test-2": 86
-        },
-        projects: {
-          "mp-1": 9.0,
-          "mp-2": 8.8,
-          "p-1": 9.5,
-          "pi-1": 8.2
-        }
-      },
-      {
-        id: "3",
-        name: "Pedro Costa",
-        email: "pedro@email.com",
-        number: 3,
-        presence: {
-          general: 78,
-          programming: 85,
-          english: 72,
-          softSkills: 80
-        },
-        coodesh: {
-          "test-1": 90,
-          "test-2": 75
-        },
-        projects: {
-          "mp-1": 7.5,
-          "mp-2": 8.0,
-          "p-1": 8.5,
-          "pi-1": 7.2
-        }
-      },
-      {
-        id: "4",
-        name: "Ana Oliveira",
-        email: "ana@email.com",
-        number: 4,
-        presence: {
-          general: 95,
-          programming: 98,
-          english: 92,
-          softSkills: 96
-        },
-        coodesh: {
-          "test-1": 88,
-          "test-2": 94
-        },
-        projects: {
-          "mp-1": 9.5,
-          "mp-2": 9.8,
-          "p-1": 9.0,
-          "pi-1": 8.5
-        }
-      },
-      {
-        id: "5",
-        name: "Carlos Ferreira",
-        email: "carlos@email.com",
-        number: 5,
-        presence: {
-          general: 82,
-          programming: 87,
-          english: 76,
-          softSkills: 84
-        },
-        coodesh: {
-          "test-1": 82,
-          "test-2": 89
-        },
-        projects: {
-          "project-1": 8.2,
-          "project-2": 8.7
-        }
-      }
-    ],
-    coodeshTests: [
-      { id: "test-1", name: "123" },
-      { id: "test-2", name: "Teste React" }
-    ],
-    projects: [
-      { id: "mp-1", name: "MP1" },
-      { id: "mp-2", name: "MP1" },
-      { id: "p-1", name: "P0" },
-      { id: "pi-1", name: "PI0" }
-    ]
-  };
+export async function getClassroomOverviewData(classroomId: string): Promise<ClassroomOverviewData> {
+  try {
 
-  // Simular delay de rede
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  return mockData;
+    //  pegando usuários da classroom que são estudantes
+    const [studentsProfiles, usersClassrooms] = await Promise.all([
+      getAllProfilesFilteredByRole("student"),
+      getAllUsersClassroomsByClassroomId(classroomId)
+    ]);
+
+
+
+    if (!studentsProfiles || !usersClassrooms) {
+      throw new Error("Não foi possível obter os dados dos estudantes");
+    }
+
+    // pegando apenas estudantes que estão nesta classroom
+    const classroomStudentIds = usersClassrooms.map(uc => uc.user_id);
+    const classroomStudents = studentsProfiles.filter(student =>
+      classroomStudentIds.includes(student.id)
+    );
+
+
+    // pegando projetos da classroom
+    const classroomProjects = await getAllProjectsByClassroomId(classroomId);
+
+    if (classroomProjects?.length) {
+      console.log("projetos:", classroomProjects.map(p => ({ id: p.id, title: p.title })));
+    }
+
+    // pegando assessments do Coodesh
+    const coodeshAssessments = await getAllCoodeshAssessment(classroomId);
+    const coodeshAssessmentsArray = Array.isArray(coodeshAssessments) ? coodeshAssessments : [];
+
+    if (coodeshAssessmentsArray.length) {
+      console.log("📋 Assessments:", coodeshAssessmentsArray.map((a: any) => ({
+        id: a.id,
+        name: a.name,
+        hasParticipants: !!a.participants_data?.length
+      })));
+    }
+
+    // pegando instâncias passadas do Zoom para cálculo de presença
+    const zoomPastInstances = await getAllZoomPastInstancesByClassroomId(classroomId);
+    const zoomPastInstancesArray = Array.isArray(zoomPastInstances) ? zoomPastInstances : [];
+    console.log("📹 Instâncias Zoom encontradas:", zoomPastInstancesArray.length);
+
+    // processando dados dos estudantes
+    const studentsOverview: StudentOverview[] = await Promise.all(
+      classroomStudents.map(async (student, index) => {
+        // calculando presença por tipo de aula
+        const presenceByType = calculatePresenceByType(student.id!, zoomPastInstancesArray);
+
+        // pegando notas dos projetos
+        const projectGrades = await getStudentProjectGrades(student.id!, classroomProjects || [], student.email);
+
+        // pegando notas do Coodesh
+        const coodeshGrades = getStudentCoodeshGrades(student.id!, coodeshAssessmentsArray, student.email);
+        console.log(`🧪 Notas Coodesh para ${student.full_name}:`, coodeshGrades);
+
+        return {
+          id: student.id!,
+          name: student.full_name,
+          email: student.email,
+          number: index + 1,
+          presence: presenceByType,
+          coodesh: coodeshGrades,
+          projects: projectGrades
+        };
+      })
+    );
+
+    //  dados de testes e projetos
+    const coodeshTests = coodeshAssessmentsArray.map(assessment => ({
+      id: assessment.id!,
+      name: assessment.name
+    }));
+
+    const projects = (classroomProjects || []).map(project => ({
+      id: project.id,
+      name: project.title
+    }));
+
+
+    return {
+      students: studentsOverview,
+      coodeshTests,
+      projects
+    };
+
+  } catch (error) {
+    console.error("[DEU RUIM] Erro ao obter dados do classroom overview:", error);
+
+    return {
+      students: [],
+      coodeshTests: [],
+      projects: []
+    };
+  }
 }
