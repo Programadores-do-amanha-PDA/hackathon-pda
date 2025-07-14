@@ -67,11 +67,14 @@ export const ActivityUploadModal: React.FC<ActivityUploadModalProps> = ({ isOpen
       return;
     }
 
+    type CsvRow = Record<string, string>;
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
       complete: (results) => {
-        const rawData = results.data as any[];
+        const rawData = results.data as CsvRow[];
+        console.log(rawData)
         setUploadStatus({ state: 'file_selected', message: "Arquivo lido com sucesso." });
         toast.success("Arquivo CSV processado com sucesso!");
       },
