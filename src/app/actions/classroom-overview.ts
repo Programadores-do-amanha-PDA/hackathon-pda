@@ -36,7 +36,7 @@ export async function getClassroomOverviewData(classroomId: string): Promise<Cla
     const classroomProjects = await getAllProjectsByClassroomId(classroomId);
 
     if (classroomProjects?.length) {
-      console.log("projetos:", classroomProjects.map(p => ({ id: p.id, title: p.title })));
+      // console.log("projetos:", classroomProjects.map(p => ({ id: p.id, title: p.title })));
     }
 
     // pegando assessments do Coodesh
@@ -44,30 +44,30 @@ export async function getClassroomOverviewData(classroomId: string): Promise<Cla
     const coodeshAssessmentsArray = Array.isArray(coodeshAssessments) ? coodeshAssessments : [];
 
     if (coodeshAssessmentsArray.length) {
-      console.log("📋 Assessments:", coodeshAssessmentsArray.map((a: any) => ({
-        id: a.id,
-        name: a.name,
-        hasParticipants: !!a.participants_data?.length
-      })));
+      // console.log(" Assessments:", coodeshAssessmentsArray.map((a: any) => ({
+      //   id: a.id,
+      //   name: a.name,
+      //   hasParticipants: !!a.participants_data?.length
+      // })));
     }
 
     // pegando instâncias passadas do Zoom para cálculo de presença
     const zoomPastInstances = await getAllZoomPastInstancesByClassroomId(classroomId);
     const zoomPastInstancesArray = Array.isArray(zoomPastInstances) ? zoomPastInstances : [];
-    console.log("📹 Instâncias Zoom encontradas:", zoomPastInstancesArray.length);
+
 
     // processando dados dos estudantes
     const studentsOverview: StudentOverview[] = await Promise.all(
       classroomStudents.map(async (student, index) => {
         // calculando presença por tipo de aula
-        const presenceByType = calculatePresenceByType(student.id!, zoomPastInstancesArray);
+        const presenceByType = calculatePresenceByType(student.id!, zoomPastInstancesArray, student.email);
 
         // pegando notas dos projetos
         const projectGrades = await getStudentProjectGrades(student.id!, classroomProjects || [], student.email);
 
         // pegando notas do Coodesh
         const coodeshGrades = getStudentCoodeshGrades(student.id!, coodeshAssessmentsArray, student.email);
-        console.log(`🧪 Notas Coodesh para ${student.full_name}:`, coodeshGrades);
+        console.log(`Notas Coodesh para ${student.full_name}:`, coodeshGrades);
 
         return {
           id: student.id!,

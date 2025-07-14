@@ -72,7 +72,7 @@ const createManyZoomPastInstance = async (
   try {
     const supabase = await createClient();
 
-    console.log(instancesData)
+    // console.log(instancesData)
     if (!instancesData.length) {
       throw new Error("No instances provided");
     }
@@ -137,10 +137,7 @@ const deleteZoomPastInstanceById = async (id: string) => {
 };
 
 export {
-  getAllZoomPastInstancesByClassroomId,
-  getZoomPastInstanceById,
-  createZoomPastInstance,
-  createManyZoomPastInstance,
-  updateZoomPastInstanceById,
-  deleteZoomPastInstanceById,
+  createManyZoomPastInstance, createZoomPastInstance, deleteZoomPastInstanceById, getAllZoomPastInstancesByClassroomId,
+  getZoomPastInstanceById, updateZoomPastInstanceById
 };
+

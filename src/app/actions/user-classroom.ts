@@ -32,8 +32,6 @@ export const getAllUsersClassroomsByClassroomId = async (
       .select()
       .eq("classroom_id", classroom_id);
 
-    console.log("data,getAllUsersClassroomsByClassroomId", data);
-
     if (error) throw error;
 
     return data as UserClassroomT[];
