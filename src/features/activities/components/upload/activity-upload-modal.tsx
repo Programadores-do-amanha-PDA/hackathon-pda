@@ -70,6 +70,8 @@ export const ActivityUploadModal = ({ isOpen, onClose, onDataParsed}: ActivityUp
 
     setLoading(true);
 
+    type CsvRow = Record<string, string>;
+
     Papa.parse(file, {
       header: true,
       skipEmptyLines: true,
