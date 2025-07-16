@@ -4,26 +4,27 @@ import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { ActivitySearch } from "@/features/activities/components/filters/activity-search";
-import { ActivityTypeFilter } from "@/features/activities/components/filters/activity-type-filter";
+// import { ActivityTypeFilter } from "@/features/activities/components/filters/activity-type-filter";
 import { ActivitiesTable } from "@/features/activities/components/activities-table";
 import { JustificationModal } from "@/features/activities/components/justifications/justification-modal";
+import { ActivitiesPagination } from "@/features/activities/components/pagination/activities-pagination";
 import { useActivitiesTable } from "@/features/activities/hooks/use-activities-table";
+import { usePagination } from "@/features/activities/hooks/use-pagination";
 import { ClassTypeT } from "@/types/classroom-activities";
 import { ActivityUploadModal } from "@/features/activities/components/upload/activity-upload-modal";
-import { CSVPreview } from "@/features/activities/components/upload/csv-preview"; // IMPORTADO
 
 interface ActivitiesPageProps {
-  classroomId: string;
-  classroomName?: string;
+  params: {
+    id: string;
+  };
 }
 
-const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ classroomId }) => {
+const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ params }) => {
+  const classroomId = params.id;
   const [searchTerm, setSearchTerm] = useState("");
-  const [classTypeFilter, setClassTypeFilter] = useState<ClassTypeT | "all">("all");
+  const [classTypeFilter] = useState<ClassTypeT | "all">("all");
 
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [csvData, setCsvData] = useState<any[]>([]);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
 
   const [justificationModal, setJustificationModal] = useState({
     isOpen: false,
@@ -47,10 +48,10 @@ const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ classroomId }) => {
     const term = searchTerm.toLowerCase().trim();
     return term
       ? students.filter(
-          (student) =>
-            student.name.toLowerCase().includes(term) ||
-            student.email.toLowerCase().includes(term)
-        )
+        (student) =>
+          student.name.toLowerCase().includes(term) ||
+          student.email.toLowerCase().includes(term)
+      )
       : students;
   }, [students, searchTerm]);
 
@@ -60,10 +61,52 @@ const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ classroomId }) => {
       : activities.filter((a) => a.class_type === classTypeFilter);
   }, [activities, classTypeFilter]);
 
+  // Estado para controlar loading durante mudança de página
+  // const [isChangingPage, setIsChangingPage] = useState(false);
+
+  // Paginação
+  const {
+    currentPage,
+    pageSize,
+    totalItems,
+    totalPages,
+    paginatedItems: paginatedStudents,
+    handlePageChange,
+    handlePageSizeChange,
+    resetPagination,
+  } = usePagination({
+    items: filteredStudents,
+    initialPageSize: 20,
+  });
+
+  // Ref para a tabela para scroll automático
+  const tableRef = React.useRef<HTMLDivElement>(null);
+
+  // Filtrar submissionStatuses baseado nos estudantes paginados
   const filteredSubmissionStatuses = useMemo(() => {
-    const studentIds = new Set(filteredStudents.map((s) => s.id));
+    const studentIds = new Set(paginatedStudents.map((s) => s.id));
+    console.log('Filtering submissionStatuses for students:', {
+      paginatedStudentsCount: paginatedStudents.length,
+      currentPage,
+      pageSize,
+      totalItems,
+      studentIds: Array.from(studentIds)
+    });
     return submissionStatuses.filter((s) => studentIds.has(s.student.id));
-  }, [submissionStatuses, filteredStudents]);
+  }, [submissionStatuses, paginatedStudents, currentPage, pageSize, totalItems]);
+
+  // Scroll automático para o topo quando a página mudar
+  React.useEffect(() => {
+    console.log('useEffect currentPage changed to:', currentPage);
+    if (tableRef.current) {
+      tableRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [currentPage]);
+
+  // Reset paginação quando filtros mudam
+  React.useEffect(() => {
+    resetPagination();
+  }, [searchTerm, classTypeFilter, resetPagination]);
 
   const handleJustifyPendency = (activityId: string, studentEmail: string) => {
     const student = students.find((s) => s.email === studentEmail);
@@ -102,57 +145,60 @@ const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ classroomId }) => {
     }
   };
 
-  // 🔄 Quando o arquivo CSV for processado
-  const handleDataParsed = (data: any[]) => {
-    setCsvData(data);
+  const handleDataParsed = (data: Record<string, unknown>[]) => {
     setIsUploadModalOpen(false);
-    setIsPreviewOpen(true);
-  };
-
-  // 🔒 Quando clicar em "Salvar" no preview
-  const handleSavePreview = () => {
-    // Em breve: salvar dados na tabela
-    console.log("Salvar dados CSV na tabela:", csvData);
-    setIsPreviewOpen(false);
+    // Em breve: processar dados CSV
+    console.log("Dados CSV processados:", data);
   };
 
   return (
-    <div className="p-6 space-y-6">
-      
-      {/* Filtros e botão de adicionar */}
-      <div className="flex justify-between items-center">
-        <ActivitySearch
-          value={searchTerm}
-          onChange={setSearchTerm}
-        />
-        <Button
-          variant="default"
-          className="gap-2"
-          onClick={() => setIsUploadModalOpen(true)}
-        >
-          <Plus className="w-4 h-4" />
-          Adicionar atividade
-        </Button>
-      </div>
-
-      {/* Filtro por tipo */}
-      <div className="flex justify-start">
-        <ActivityTypeFilter
-          value={classTypeFilter}
-          onChange={setClassTypeFilter}
-        />
+    <div className="flex flex-col h-full min-h-0">
+      <div className="flex-none p-6 pb-4">
+        {/* Filtros e botão de adicionar */}
+        <div className="flex flex-col gap-4 sm:flex-row sm:justify-between sm:items-center">
+          <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
+            <ActivitySearch
+              value={searchTerm}
+              onChange={setSearchTerm}
+            />
+            {/* <ActivityTypeFilter
+              value={classTypeFilter}
+              onChange={setClassTypeFilter}
+            /> */}
+          </div>
+          <Button
+            variant="default"
+            className="gap-2 bg-amber-500 hover:bg-amber-600 text-amber-900"
+            onClick={() => setIsUploadModalOpen(true)}
+          >
+            <Plus className="w-4 h-4" />
+            Adicionar atividade
+          </Button>
+        </div>
       </div>
 
       {/* Tabela de atividades */}
-      <div className="border rounded-lg">
+      <div ref={tableRef} className="flex-1 px-6 min-h-0">
         <ActivitiesTable
           classroomId={classroomId}
           activities={filteredActivities}
-          students={filteredStudents}
+          students={paginatedStudents}
           submissionStatuses={filteredSubmissionStatuses}
           onJustifyPendency={handleJustifyPendency}
           onEditJustification={handleEditJustification}
           isLoading={isLoading}
+        />
+      </div>
+
+      {/* Paginação */}
+      <div className="flex-none p-6 pt-4 border-t bg-background/95 backdrop-blur-sm">
+        <ActivitiesPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          pageSize={pageSize}
+          totalItems={totalItems}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
       </div>
 
@@ -173,14 +219,6 @@ const ActivitiesPage: React.FC<ActivitiesPageProps> = ({ classroomId }) => {
         isOpen={isUploadModalOpen}
         onClose={() => setIsUploadModalOpen(false)}
         onDataParsed={handleDataParsed}
-      />
-
-      {/* Modal de preview CSV */}
-      <CSVPreview
-        isOpen={isPreviewOpen}
-        onClose={() => setIsPreviewOpen(false)}
-        onSave={handleSavePreview}
-        data={csvData}
       />
     </div>
   );

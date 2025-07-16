@@ -15,7 +15,11 @@ export type ClassTypeT =
   | "programming"
   | "english"
   | "soft-skills"
-  | "community";
+  | "community"
+  | "Workshop"
+  | "Reforço"
+  | "Recuperação"
+  | "Workshop Especial";
 
 export interface ClassroomActivity {
   id: string;
