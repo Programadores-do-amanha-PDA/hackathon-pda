@@ -25,6 +25,10 @@ export const ActivityTypeFilter: React.FC<ActivityTypeFilterProps> = ({
     { value: "english", label: "Inglês" },
     { value: "soft-skills", label: "Soft Skills" },
     { value: "community", label: "Comunidade" },
+    { value: "Workshop", label: "Workshop" },
+    { value: "Reforço", label: "Reforço" },
+    { value: "Recuperação", label: "Recuperação" },
+    { value: "Workshop Especial", label: "Workshop Especial" },
   ] as const;
 
   return (

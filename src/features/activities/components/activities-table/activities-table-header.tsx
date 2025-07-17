@@ -2,6 +2,13 @@
 
 import React from "react";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ClassroomActivity } from "@/types/classroom-activities";
 
 interface ActivitiesTableHeaderProps {
@@ -33,25 +40,16 @@ export const ActivitiesTableHeader: React.FC<ActivitiesTableHeaderProps> = ({
     });
   };
 
-  const formatActivityType = (type: string | null) => {
-    if (!type) return "Geral";
-
-    const typeMap = {
-      programming: "Programação",
-      english: "Inglês",
-      "soft-skills": "Soft Skills",
-      community: "Comunidade",
-    };
-
-    return typeMap[type as keyof typeof typeMap] || type;
-  };
-
   // Tipos disponíveis para o dropdown
   const classTypes = [
     { value: "programming", label: "Programação" },
     { value: "english", label: "Inglês" },
     { value: "soft-skills", label: "Soft Skills" },
     { value: "community", label: "Comunidade" },
+    { value: "Workshop", label: "Workshop" },
+    { value: "Reforço", label: "Reforço" },
+    { value: "Recuperação", label: "Recuperação" },
+    { value: "Workshop Especial", label: "Workshop Especial" },
   ];
 
   // Estado local para seleção visual do tipo (apenas UI, não salva no banco)
@@ -82,15 +80,21 @@ export const ActivitiesTableHeader: React.FC<ActivitiesTableHeaderProps> = ({
               </span>
 
               {/* Dropdown de tipo de atividade */}
-              <select
-                className="text-xs font-medium w-full bg-white border border-gray-200 rounded px-2 py-1 cursor-pointer text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <Select
                 value={selectedTypes[activity.id] || activity.class_type || "programming"}
-                onChange={e => handleTypeChange(activity.id, e.target.value)}
+                onValueChange={(value) => handleTypeChange(activity.id, value)}
               >
-                {classTypes.map(type => (
-                  <option key={type.value} value={type.value}>{type.label}</option>
-                ))}
-              </select>
+                <SelectTrigger className="w-full h-6 text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {classTypes.map(type => (
+                    <SelectItem key={type.value} value={type.value}>
+                      {type.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </TableHead>
         ))}
