@@ -2,7 +2,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AuthUserWithProfileT } from "@/types/auth";
 import { ClassroomT } from "@/types/classrooms";
 import { LucideIcon } from "lucide-react";
-import createClassroomNavigation from "./classroom-navigation";
+
+//Comentado pois gerava erro
+// import createClassroomNavigation from "./classroom-navigation";
+
+
 
 const createClassroomNavigation = (
   classrooms: ClassroomT[],
@@ -57,3 +61,5 @@ const createSidebarData = (
 });
 
 export default createSidebarData;
+
+

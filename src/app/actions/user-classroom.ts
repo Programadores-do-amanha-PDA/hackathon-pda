@@ -24,13 +24,13 @@ export const getAllUsersClassroomsByClassroomId = async (
   classroom_id: string
 ) => {
   try {
+    console.log("classroom_id", classroom_id);
     const supabase = await createClient();
 
     const { data, error } = await supabase
       .from("user_classrooms")
       .select()
-      .eq("classroom_id", classroom_id)
-      .order("created_at", { ascending: false });
+      .eq("classroom_id", classroom_id);
 
     if (error) throw error;
 
