@@ -128,3 +128,9 @@ export interface ClassroomStackI {
   ) => Promise<boolean>;
   handleDeleteClassroom: (classroomId: string) => Promise<boolean>;
 }
+
+export { default as useClassroomProjects } from "./projects";
+export type { ClassroomProjectsI } from "./projects";
+
+export { default as useClassroomActivities } from "./activities";
+export type { ClassroomActivitiesI } from "./activities";
